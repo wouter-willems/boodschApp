@@ -4,6 +4,8 @@ import {TodoItem} from "./todo-item/todoItem.model";
 import {HttpClient} from "@angular/common/http";
 import {firstValueFrom} from "rxjs";
 
+const apiRoot = '/api/'
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,14 +25,14 @@ export class TodoItemsService {
   }
 
   public async getItems(): Promise<Array<TodoItem>> {
-    const items: any = await firstValueFrom(this.http.get('http://localhost:3000/items'));
+    const items: any = await firstValueFrom(this.http.get(apiRoot + 'items'));
     const currentItems = items.map(e => this.apiDataToTodoItem(e));
 
     return currentItems;
   }
 
   public async getSuggestions(): Promise<Array<string>> {
-    return await firstValueFrom(this.http.get<Array<string>>('http://localhost:3000/suggestions'));
+    return await firstValueFrom(this.http.get<Array<string>>(apiRoot + 'suggestions'));
   }
 
   private apiDataToTodoItem(e) {
@@ -41,7 +43,7 @@ export class TodoItemsService {
   }
 
   public async addItem(todoItem: TodoItem) {
-    const newItem = await firstValueFrom(this.http.post<TodoItem>('http://localhost:3000/items', {
+    const newItem = await firstValueFrom(this.http.post<TodoItem>(apiRoot + 'items', {
       name: todoItem.name
     })).then(this.apiDataToTodoItem);
     this.fireListeners();
@@ -49,7 +51,7 @@ export class TodoItemsService {
   }
 
   public async itemBought(item: TodoItem): Promise<TodoItem> {
-    const res = await firstValueFrom(this.http.patch<TodoItem>(`http://localhost:3000/items/${item.id}`, {
+    const res = await firstValueFrom(this.http.patch<TodoItem>(apiRoot + `items/${item.id}`, {
       name: item.name,
       boughtAt: new Date(),
     })).then(this.apiDataToTodoItem);
@@ -58,7 +60,7 @@ export class TodoItemsService {
   }
 
   async undoItemBought(item: TodoItem) {
-    const res = firstValueFrom(this.http.patch<TodoItem>(`http://localhost:3000/items/${item.id}`, {
+    const res = firstValueFrom(this.http.patch<TodoItem>(apiRoot + `items/${item.id}`, {
       name: item.name,
       boughtAt: null,
     })).then(this.apiDataToTodoItem);
@@ -67,7 +69,7 @@ export class TodoItemsService {
   }
 
   async deleteItem(item: TodoItem) {
-    await firstValueFrom(this.http.delete<void>(`http://localhost:3000/items/${item.id}`));
+    await firstValueFrom(this.http.delete<void>(apiRoot + `items/${item.id}`));
     this.fireListeners();
   }
 }

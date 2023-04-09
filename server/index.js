@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const apiRouter = express.Router();
 const fs = require('fs');
 const {randomUUID} = require('crypto');
 
@@ -54,11 +55,11 @@ function readSuggestions() {
 }
 
 
-app.get('/items', function (req, res) {
+apiRouter.get('/items', function (req, res) {
     const items = readData();
     res.json(items)
 });
-app.post('/items', function (req, res) {
+apiRouter.post('/items', function (req, res) {
     const items = readData();
     const body = req.body;
     const newItem = {
@@ -71,7 +72,7 @@ app.post('/items', function (req, res) {
     addSuggestion(newItem.name);
     return res.json(newItem);
 });
-app.patch('/items/:id', function (req, res) {
+apiRouter.patch('/items/:id', function (req, res) {
     const id = req.params.id;
     const body = req.body;
 
@@ -90,7 +91,7 @@ app.patch('/items/:id', function (req, res) {
     addSuggestion(body.name);
     return res.json(altered.find(e => e.id === id));
 });
-app.delete('/items/:id', function (req, res) {
+apiRouter.delete('/items/:id', function (req, res) {
     const id = req.params.id;
 
     const items = readData();
@@ -98,8 +99,10 @@ app.delete('/items/:id', function (req, res) {
     writeData(altered);
     return res.send();
 });
-app.get('/suggestions', function (req, res) {
+apiRouter.get('/suggestions', function (req, res) {
     const suggestions = readSuggestions();
     res.json(suggestions)
 });
+app.use('/api', apiRouter);
+app.use(express.static('static/generated'))
 app.listen(3000)
