@@ -1,0 +1,12 @@
+<div class="componentContainer">
+  <div class="info">
+    <div class="header">
+      <div *ngIf="item.isCompleted()" class="boughtAt">Gekocht op {{item.boughtAt | date}}</div>
+    </div>
+    <div class="itemName" [ngClass]="{itemIsBought: item.isCompleted()}">{{item.name}}</div>
+  </div>
+  <div class="CTAs">
+    <button *ngIf="!item.isCompleted()" (click)="boughtIt()">Bought it</button>
+    <button *ngIf="shouldShowUndoButton()" (click)="undo()">Undo</button>
+  </div>
+</div>

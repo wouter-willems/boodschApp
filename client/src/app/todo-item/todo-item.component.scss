@@ -1,0 +1,26 @@
+:host {
+  display: block;
+}
+
+.componentContainer {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  .info {
+    flex-grow: 1;
+  }
+  .header {
+    font-size: 14px;
+  }
+  .itemInfo {
+    display: flex;
+  }
+  .itemName {
+    &.itemIsBought {
+      text-decoration: line-through;;
+    }
+  }
+  .CTAs {
+
+  }
+}
