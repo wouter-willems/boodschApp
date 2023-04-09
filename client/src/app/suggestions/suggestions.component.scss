@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  button {
+    width: auto;
+    padding: 0px 10px;
+
+    color: #90aeac;
+    background: white;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: #90aeac;
+    border-style: dashed;
+  }
+}

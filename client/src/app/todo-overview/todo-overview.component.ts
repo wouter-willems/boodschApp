@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import {stringIsSetAndFilled} from "../../util/values";
 import {TodoItem} from "../todo-item/todoItem.model";
 import {TodoItemsService} from "../todo-items.service";
+import {NewTodoItemComponent} from "../new-todo-item/new-todo-item.component";
 
 export const TODO_ITEMS_KEY = 'todoItems';
 
@@ -12,6 +13,9 @@ export const TODO_ITEMS_KEY = 'todoItems';
 })
 export class TodoOverviewComponent {
   public todoItems: Array<TodoItem>;
+  public currentSearch: string;
+
+  @ViewChild(NewTodoItemComponent) newTodoItemComponent: NewTodoItemComponent;
 
   constructor(private todoItemsService: TodoItemsService) {
 
@@ -23,6 +27,23 @@ export class TodoOverviewComponent {
   }
 
   async itemAdded() {
+    this.newTodoItemComponent.clear();
+    this.todoItems = await this.todoItemsService.getItems();
+  }
+
+  itemInputBlurred() {
+
+  }
+
+  itemInputFocused() {
+
+  }
+
+  setCurrentSearch($event: string) {
+    this.currentSearch = $event;
+  }
+
+  async refreshItems() {
     this.todoItems = await this.todoItemsService.getItems();
   }
 }

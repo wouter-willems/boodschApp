@@ -1,12 +1,16 @@
 <div class="componentContainer">
   <div class="info">
     <div class="header">
-      <div *ngIf="item.isCompleted()" class="boughtAt">Gekocht op {{item.boughtAt | date}}</div>
+      <div *ngIf="item.isCompleted()" class="boughtAt">Gekocht op {{item.boughtAt | date: 'short'}}</div>
     </div>
     <div class="itemName" [ngClass]="{itemIsBought: item.isCompleted()}">{{item.name}}</div>
   </div>
   <div class="CTAs">
     <button *ngIf="!item.isCompleted()" (click)="boughtIt()">Bought it</button>
-    <button *ngIf="shouldShowUndoButton()" (click)="undo()">Undo</button>
+    <button class="undoButton" *ngIf="shouldShowUndoButton()" (click)="undo()">Undo</button>
+    <button class="deleteButton" (click)="deleteItem()">
+      <span *ngIf="!showDeleteAreYouSurePrompt">🗑</span>
+      <span *ngIf="showDeleteAreYouSurePrompt">OK</span>
+    </button>
   </div>
 </div>

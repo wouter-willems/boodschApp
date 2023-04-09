@@ -1,8 +1,9 @@
 <ol>
   <li>
-    <app-new-todo-item (onItemAdded)="itemAdded()"></app-new-todo-item>
+    <app-new-todo-item (onItemAdded)="itemAdded()" (onBlur)="itemInputBlurred()" (onFocus)="itemInputFocused()" (onSearch)="setCurrentSearch($event)"></app-new-todo-item>
+    <app-suggestions [search]="currentSearch" (onItemAdded)="itemAdded()"></app-suggestions>
   </li>
   <li *ngFor="let item of todoItems">
-    <app-todo-item [item]="item"></app-todo-item>
+    <app-todo-item [item]="item" (onDelete)="refreshItems()"></app-todo-item>
   </li>
 </ol>

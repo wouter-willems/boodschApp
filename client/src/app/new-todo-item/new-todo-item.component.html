@@ -1,4 +1,4 @@
 <div class="componentContainer">
-  <input type="text" [(ngModel)]="itemName" />
+  <input type="text" [(ngModel)]="itemName" (focus)="onFocus.emit()" (blur)="onBlur.emit()" (ngModelChange)="onSearch.emit($event)" />
   <button (click)="addItem()">Add</button>
 </div>

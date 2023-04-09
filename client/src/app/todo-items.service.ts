@@ -1,5 +1,4 @@
 import {Injectable} from '@angular/core';
-import {TODO_ITEMS_KEY} from "./todo-overview/todo-overview.component";
 import {stringIsSetAndFilled} from "../util/values";
 import {TodoItem} from "./todo-item/todoItem.model";
 import {HttpClient} from "@angular/common/http";
@@ -10,7 +9,17 @@ import {firstValueFrom} from "rxjs";
 })
 export class TodoItemsService {
 
+  private listeners = [];
+
   constructor(private http: HttpClient) {
+  }
+
+  public addListener(fn) {
+    this.listeners.push(fn);
+  }
+
+  private fireListeners() {
+    this.listeners.forEach(e => e());
   }
 
   public async getItems(): Promise<Array<TodoItem>> {
@@ -18,6 +27,10 @@ export class TodoItemsService {
     const currentItems = items.map(e => this.apiDataToTodoItem(e));
 
     return currentItems;
+  }
+
+  public async getSuggestions(): Promise<Array<string>> {
+    return await firstValueFrom(this.http.get<Array<string>>('http://localhost:3000/suggestions'));
   }
 
   private apiDataToTodoItem(e) {
@@ -28,23 +41,33 @@ export class TodoItemsService {
   }
 
   public async addItem(todoItem: TodoItem) {
-    const newItem = firstValueFrom(this.http.post<TodoItem>('http://localhost:3000/items', {
+    const newItem = await firstValueFrom(this.http.post<TodoItem>('http://localhost:3000/items', {
       name: todoItem.name
     })).then(this.apiDataToTodoItem);
+    this.fireListeners();
     return newItem;
   }
 
   public async itemBought(item: TodoItem): Promise<TodoItem> {
-    return firstValueFrom(this.http.patch<TodoItem>(`http://localhost:3000/items/${item.id}`, {
+    const res = await firstValueFrom(this.http.patch<TodoItem>(`http://localhost:3000/items/${item.id}`, {
       name: item.name,
       boughtAt: new Date(),
     })).then(this.apiDataToTodoItem);
+    this.fireListeners();
+    return res;
   }
 
   async undoItemBought(item: TodoItem) {
-    return firstValueFrom(this.http.patch<TodoItem>(`http://localhost:3000/items/${item.id}`, {
+    const res = firstValueFrom(this.http.patch<TodoItem>(`http://localhost:3000/items/${item.id}`, {
       name: item.name,
       boughtAt: null,
     })).then(this.apiDataToTodoItem);
+    this.fireListeners();
+    return res;
+  }
+
+  async deleteItem(item: TodoItem) {
+    await firstValueFrom(this.http.delete<void>(`http://localhost:3000/items/${item.id}`));
+    this.fireListeners();
   }
 }

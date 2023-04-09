@@ -8,13 +8,15 @@ import {TodoOverviewComponent} from "./todo-overview/todo-overview.component";
 import {NewTodoItemComponent} from "./new-todo-item/new-todo-item.component";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import { HttpClientModule } from '@angular/common/http';
+import { SuggestionsComponent } from './suggestions/suggestions.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     TodoOverviewComponent,
     TodoItemComponent,
-    NewTodoItemComponent
+    NewTodoItemComponent,
+    SuggestionsComponent
   ],
   imports: [
     BrowserModule,

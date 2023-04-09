@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {TodoItem} from "./todoItem.model";
 import {TodoItemsService} from "../todo-items.service";
 import {isValueSet} from "../../util/values";
@@ -11,6 +11,8 @@ import {isValueSet} from "../../util/values";
 })
 export class TodoItemComponent {
   @Input() item: TodoItem;
+  @Output() onDelete = new EventEmitter<void>();
+  public showDeleteAreYouSurePrompt = false;
 
   constructor(private todoItemsService: TodoItemsService) {
   }
@@ -28,5 +30,14 @@ export class TodoItemComponent {
 
   async undo() {
     this.item = await this.todoItemsService.undoItemBought(this.item);
+  }
+
+  async deleteItem() {
+    if (!this.showDeleteAreYouSurePrompt) {
+      this.showDeleteAreYouSurePrompt = true;
+      return;
+    }
+    await this.todoItemsService.deleteItem(this.item);
+    this.onDelete.emit();
   }
 }

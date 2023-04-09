@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  background: #144e5e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  height: 46px;
+}
+
+.title {
+  font-family: cursive;
+  font-size: 24px;
+}
+.author {
+  font-size: 8px;
+  margin-top: 9px;
+  margin-left: 2px;
+}

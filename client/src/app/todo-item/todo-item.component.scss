@@ -5,22 +5,42 @@
 .componentContainer {
   margin-top: 10px;
   display: flex;
+  align-items: center;
   gap: 10px;
+
   .info {
     flex-grow: 1;
+    overflow: hidden;
+    word-wrap: break-word;
   }
+
   .header {
     font-size: 14px;
   }
+
   .itemInfo {
     display: flex;
   }
+
   .itemName {
     &.itemIsBought {
-      text-decoration: line-through;;
+      text-decoration: line-through;
     }
   }
-  .CTAs {
 
+  .CTAs {
+    display: flex;
+    gap: 6px;
+    .undoButton {
+      background: #ae90a6;
+    }
+    .deleteButton {
+      width: 40px;
+      color: #ae90a6;
+      background: white;
+      border-color: #ae90a6;
+      border-width: 1px;
+      border-style: dashed;
+    }
   }
 }

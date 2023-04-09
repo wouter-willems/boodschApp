@@ -32,6 +32,28 @@ function readData() {
     }
 }
 
+function writeData(items) {
+    const filtered = items.filter(e => e.boughtAt === null || new Date(e.boughtAt).getTime() > new Date().getTime() - 1000 * 60 * 60 * 24);
+    fs.writeFileSync('data.json', JSON.stringify(filtered))
+}
+
+function addSuggestion(suggestion) {
+    const suggestions = readSuggestions();
+    if (!suggestions.includes(suggestion)) {
+        fs.writeFileSync('suggestions.json', JSON.stringify([suggestion, ...suggestions]))
+    }
+
+}
+
+function readSuggestions() {
+    try {
+        return JSON.parse(fs.readFileSync('suggestions.json', 'utf8'));
+    } catch (err) {
+        return [];
+    }
+}
+
+
 app.get('/items', function (req, res) {
     const items = readData();
     res.json(items)
@@ -45,7 +67,8 @@ app.post('/items', function (req, res) {
         "boughtAt": null,
     };
     items.unshift(newItem);
-    fs.writeFileSync('data.json', JSON.stringify(items))
+    writeData(items);
+    addSuggestion(newItem.name);
     return res.json(newItem);
 });
 app.patch('/items/:id', function (req, res) {
@@ -63,9 +86,20 @@ app.patch('/items/:id', function (req, res) {
         }
         return e;
     });
-    fs.writeFileSync('data.json', JSON.stringify(altered))
-
+    writeData(altered);
+    addSuggestion(body.name);
     return res.json(altered.find(e => e.id === id));
 });
+app.delete('/items/:id', function (req, res) {
+    const id = req.params.id;
 
+    const items = readData();
+    const altered = items.filter(e => e.id !== id);
+    writeData(altered);
+    return res.send();
+});
+app.get('/suggestions', function (req, res) {
+    const suggestions = readSuggestions();
+    res.json(suggestions)
+});
 app.listen(3000)

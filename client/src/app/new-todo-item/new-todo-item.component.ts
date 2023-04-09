@@ -12,11 +12,18 @@ import {TodoItemsService} from "../todo-items.service";
 export class NewTodoItemComponent {
   public itemName: string;
   @Output() onItemAdded = new EventEmitter<void>();
+  @Output() onBlur = new EventEmitter<void>();
+  @Output() onFocus = new EventEmitter<void>();
+  @Output() onSearch = new EventEmitter<string>();
 
   constructor(private todoItemsService: TodoItemsService) {
 
   }
 
+  public clear() {
+    this.itemName = '';
+    this.onSearch.emit('');
+  }
 
   public async addItem() {
     if (stringIsSetAndFilled(this.itemName)) {
