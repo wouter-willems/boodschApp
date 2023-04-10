@@ -11,6 +11,9 @@ header {
   background: #144e5e;
   color: white;
   height: 46px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   button {
     position: absolute;
     right: 6px;

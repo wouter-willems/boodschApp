@@ -12,6 +12,7 @@ app.use(cors({
 app.use(express.json());
 
 function getUser(token) {
+    const tokens = readTokens();
     if (tokens[token]) {
         return tokens[token];
     }
@@ -39,7 +40,14 @@ function addSuggestion(token, suggestion) {
     if (!suggestions.includes(suggestion)) {
         fs.writeFileSync('suggestions.json', JSON.stringify([suggestion, ...suggestions]))
     }
+}
 
+function readTokens() {
+    try {
+        return JSON.parse(fs.readFileSync('tokens.json', 'utf8'));
+    } catch (err) {
+        return [];
+    }
 }
 
 function readSuggestions(token) {
@@ -101,13 +109,9 @@ apiRouter.get('/suggestions', function (req, res) {
     res.json(suggestions)
 });
 
-const tokens = {
-    'aap': 'Wouter',
-    'dog': 'Maaike',
-}
-
 apiRouter.post('/login', function (req, res) {
     const token = req.body.token;
+    const tokens = readTokens();
     if (tokens[token]) {
         return res.json(tokens[token]);
     }
