@@ -1,9 +1,9 @@
 const express = require('express')
 const app = express()
 const cors = require('cors');
+const { v4: uuidv4 } = require('uuid');
 const apiRouter = express.Router();
 const fs = require('fs');
-const {randomUUID} = require('crypto');
 const path = require('path');
 
 app.use(cors({
@@ -61,7 +61,7 @@ apiRouter.post('/items', function (req, res) {
     const body = req.body;
     const newItem = {
         "name": body.name,
-        "id": randomUUID(),
+        "id": uuidv4(),
         "boughtAt": null,
     };
     items.unshift(newItem);
