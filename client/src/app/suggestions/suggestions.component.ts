@@ -19,7 +19,7 @@ export class SuggestionsComponent {
 
   }
 
-  async ngOnInit(){
+  async ngOnInit() {
     this.allSuggestions = await this.todoItemsService.getSuggestions();
     this.todoItemsService.addListener(async () => {
       this.allSuggestions = await this.todoItemsService.getSuggestions();
@@ -32,7 +32,7 @@ export class SuggestionsComponent {
       this.suggestions = [];
       return;
     }
-    this.suggestions = this.allSuggestions.filter(e => e.includes(this.search)).sort((a, b) => {
+    this.suggestions = this.allSuggestions.filter(e => e.toLowerCase().includes(this.search.toLowerCase())).sort((a, b) => {
       return a.localeCompare(b);
     });
   }
