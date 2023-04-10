@@ -7,4 +7,14 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'boodschapp';
+  public showLogOutConfirm = false;
+
+  logOut() {
+    if (!this.showLogOutConfirm) {
+      this.showLogOutConfirm = true;
+      return;
+    }
+    localStorage.removeItem('token');
+    window.location.reload();
+  }
 }

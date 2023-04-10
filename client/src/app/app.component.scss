@@ -9,11 +9,31 @@ header {
   right: 0;
   z-index: 1;
   background: #144e5e;
+  color: white;
+  height: 46px;
+  button {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    bottom: 6px;
+    height: auto;
+    width: 34px;
+    background: #ae90a6;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .confirm {
+      font-size: 14px;
+    }
+  }
+}
+
+.logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  height: 46px;
+
 }
 
 .title {

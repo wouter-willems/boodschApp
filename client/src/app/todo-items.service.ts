@@ -1,10 +1,11 @@
 import {Injectable} from '@angular/core';
 import {stringIsSetAndFilled} from "../util/values";
 import {TodoItem} from "./todo-item/todoItem.model";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {firstValueFrom} from "rxjs";
 
-const apiRoot = '/api/'
+const apiRoot = '/api/';
+// const apiRoot = 'http://localhost:3000/api/';
 
 @Injectable({
   providedIn: 'root'
@@ -71,5 +72,13 @@ export class TodoItemsService {
   async deleteItem(item: TodoItem) {
     await firstValueFrom(this.http.delete<void>(apiRoot + `items/${item.id}`));
     this.fireListeners();
+  }
+
+  async login(token: string) {
+    const userName = await firstValueFrom(this.http.post<void>(apiRoot + `login`, {
+      token
+    }));
+    localStorage.setItem('token', token);
+    return userName;
   }
 }

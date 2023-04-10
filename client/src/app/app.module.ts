@@ -7,8 +7,10 @@ import {TodoItemComponent} from "./todo-item/todo-item.component";
 import {TodoOverviewComponent} from "./todo-overview/todo-overview.component";
 import {NewTodoItemComponent} from "./new-todo-item/new-todo-item.component";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { SuggestionsComponent } from './suggestions/suggestions.component';
+import { LoginComponent } from './login/login.component';
+import { AuthInterceptor } from './auth-interceptor';
 
 @NgModule({
   declarations: [
@@ -16,7 +18,8 @@ import { SuggestionsComponent } from './suggestions/suggestions.component';
     TodoOverviewComponent,
     TodoItemComponent,
     NewTodoItemComponent,
-    SuggestionsComponent
+    SuggestionsComponent,
+    LoginComponent
   ],
   imports: [
     BrowserModule,
@@ -25,7 +28,13 @@ import { SuggestionsComponent } from './suggestions/suggestions.component';
     ReactiveFormsModule,
     HttpClientModule,
   ],
-  providers: [],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {

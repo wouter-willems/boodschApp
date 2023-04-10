@@ -1,7 +1,13 @@
 <header>
-  <span class="title">BoodschApp</span>
-  <div class="author">
-    <span>&nbsp;by Wutu</span>
+  <div class="logo">
+    <span class="title">BoodschApp</span>
+    <div class="author">
+      <span>&nbsp;by Wutu</span>
+    </div>
   </div>
+  <button (click)="logOut()">
+    <span *ngIf="!showLogOutConfirm">⏼</span>
+    <span class="confirm" *ngIf="showLogOutConfirm">OK</span>
+  </button>
 </header>
 <router-outlet></router-outlet>
