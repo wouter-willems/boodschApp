@@ -8,13 +8,14 @@ import {Router} from "@angular/router";
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
+  environment: string;
   token: string;
 
   constructor(private todoItemsService: TodoItemsService, private router: Router) {
   }
 
   async enterToken() {
-    await this.todoItemsService.login(this.token);
+    await this.todoItemsService.login(this.environment, this.token);
     await this.router.navigateByUrl('/items');
   }
 }

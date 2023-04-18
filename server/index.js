@@ -1,8 +1,10 @@
 const express = require('express')
+const httpContext = require('express-http-context');
 const app = express()
 const cors = require('cors');
-const { v4: uuidv4 } = require('uuid');
+const {v4: uuidv4} = require('uuid');
 const apiRouter = express.Router();
+const apiRouterAuth = express.Router();
 const fs = require('fs');
 const path = require('path');
 
@@ -19,26 +21,33 @@ function getUser(token) {
     throw new Error('No user');
 }
 
-function readData(token) {
-    getUser(token);
+function getContextVars() {
+    return {
+        environment: httpContext.get('environment'),
+        token: httpContext.get('token'),
+    }
+}
+
+function readData() {
+    const {environment} = getContextVars();
     try {
-        return JSON.parse(fs.readFileSync('data.json', 'utf8'));
+        return JSON.parse(fs.readFileSync(`data_${environment}.json`, 'utf8'));
     } catch (err) {
         return [];
     }
 }
 
 function writeData(token, items) {
-    getUser(token);
+    const {environment} = getContextVars();
     const filtered = items.filter(e => e.boughtAt === null || new Date(e.boughtAt).getTime() > new Date().getTime() - 1000 * 60 * 60 * 24);
-    fs.writeFileSync('data.json', JSON.stringify(filtered))
+    fs.writeFileSync(`data_${environment}.json`, JSON.stringify(filtered))
 }
 
-function addSuggestion(token, suggestion) {
-    getUser(token);
-    const suggestions = readSuggestions(token);
+function addSuggestion(suggestion) {
+    const {environment} = getContextVars();
+    const suggestions = readSuggestions();
     if (!suggestions.includes(suggestion)) {
-        fs.writeFileSync('suggestions.json', JSON.stringify([suggestion, ...suggestions]))
+        fs.writeFileSync(`suggestions_${environment}.json`, JSON.stringify([suggestion, ...suggestions]))
     }
 }
 
@@ -50,21 +59,36 @@ function readTokens() {
     }
 }
 
-function readSuggestions(token) {
-    getUser(token);
+function readSuggestions() {
+    const {environment} = getContextVars();
     try {
-        return JSON.parse(fs.readFileSync('suggestions.json', 'utf8'));
+        return JSON.parse(fs.readFileSync(`suggestions_${environment}.json`, 'utf8'));
     } catch (err) {
         return [];
     }
 }
 
+apiRouterAuth.use(httpContext.middleware);
+apiRouterAuth.use((req, res, next) => {
+    const environment = req.headers.environment;
+    const token = req.headers.token;
+    const tokens = readTokens();
+    if (tokens[environment] && tokens[environment][token]) {
+        httpContext.set('environment', environment);
+        httpContext.set('token', token);
+        next();
+    } else {
+        const err = new Error('Forbidden');
+        err.status = 403;
+        next(err);
+    }
+})
 
-apiRouter.get('/items', function (req, res) {
-    const items = readData(req.headers.token);
+apiRouterAuth.get('/items', function (req, res) {
+    const items = readData();
     res.json(items)
 });
-apiRouter.post('/items', function (req, res) {
+apiRouterAuth.post('/items', function (req, res) {
     const items = readData(req.headers.token);
     const body = req.body;
     const newItem = {
@@ -77,7 +101,7 @@ apiRouter.post('/items', function (req, res) {
     addSuggestion(req.headers.token, newItem.name);
     return res.json(newItem);
 });
-apiRouter.patch('/items/:id', function (req, res) {
+apiRouterAuth.patch('/items/:id', function (req, res) {
     const id = req.params.id;
     const body = req.body;
 
@@ -96,7 +120,7 @@ apiRouter.patch('/items/:id', function (req, res) {
     addSuggestion(req.headers.token, body.name);
     return res.json(altered.find(e => e.id === id));
 });
-apiRouter.delete('/items/:id', function (req, res) {
+apiRouterAuth.delete('/items/:id', function (req, res) {
     const id = req.params.id;
 
     const items = readData(req.headers.token);
@@ -104,21 +128,23 @@ apiRouter.delete('/items/:id', function (req, res) {
     writeData(req.headers.token, altered);
     return res.send();
 });
-apiRouter.get('/suggestions', function (req, res) {
+apiRouterAuth.get('/suggestions', function (req, res) {
     const suggestions = readSuggestions(req.headers.token);
     res.json(suggestions)
 });
 
 apiRouter.post('/login', function (req, res) {
+    const environment = req.body.environment;
     const token = req.body.token;
     const tokens = readTokens();
-    if (tokens[token]) {
-        return res.json(tokens[token]);
+    if (tokens[environment] && tokens[environment][token]) {
+        return res.json(tokens[environment][token]);
     }
     return res.status(403).send("Unknown token");
 });
 
 app.use('/api', apiRouter);
+apiRouter.use('/auth', apiRouterAuth);
 app.use(express.static('static/generated'))
 
 app.get('*', (req, res) => {

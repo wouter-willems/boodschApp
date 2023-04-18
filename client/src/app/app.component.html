@@ -1,13 +1,27 @@
 <header>
-  <div class="logo">
-    <span class="title">BoodschApp</span>
-    <div class="author">
-      <span>&nbsp;by Wutu</span>
+  <div class="topHeader">
+    <div class="logo">
+      <span class="title">BoodschApp</span>
+      <div class="author">
+        <span>&nbsp;by Wutu</span>
+      </div>
+    </div>
+    <button (click)="toggleMenu()">
+      <span>⏼</span>
+    </button>
+  </div>
+  <div *ngIf="this.menuIsOpen">
+    <div class="menuEntry" *ngFor="let _ of environments; let i = index">
+      <button *ngIf="activeEnv !== environments[i].env" (click)="changeEnvironment(environments[i].env, environments[i].token)">GO</button>
+      <input type="text" disabled [(ngModel)]="environments[i].env" />
+      <input type="text" disabled [(ngModel)]="environments[i].token" />
+      <button (click)="deleteEntry(i)">🗑</button>
+    </div>
+    <div class="menuEntry newEnv">
+      <input type="text" [(ngModel)]="newEnv" />
+      <input type="text" [(ngModel)]="newToken" />
+      <button (click)="loginToNewEnv(newEnv, newToken)">Log</button>
     </div>
   </div>
-  <button (click)="logOut()">
-    <span *ngIf="!showLogOutConfirm">⏼</span>
-    <span class="confirm" *ngIf="showLogOutConfirm">OK</span>
-  </button>
 </header>
 <router-outlet></router-outlet>

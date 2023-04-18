@@ -10,25 +10,45 @@ header {
   z-index: 1;
   background: #144e5e;
   color: white;
-  height: 46px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  button {
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    bottom: 6px;
-    height: auto;
-    width: 34px;
-    background: #ae90a6;
-    font-size: 26px;
+  .topHeader {
+    height: 46px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-    .confirm {
-      font-size: 14px;
+    button {
+      position: absolute;
+      right: 6px;
+      top: 6px;
+      bottom: 6px;
+      height: 34px;
+      width: 34px;
+      background: #ae90a6;
+      font-size: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .confirm {
+        font-size: 14px;
+      }
     }
+  }
+}
+
+.menuEntry {
+  display: flex;
+  padding: 10px;
+  gap: 6px;
+  > button {
+    flex: 0 0 42px;
+    color: #ae90a6;
+    background: white;
+    border-color: #ae90a6;
+    border-width: 1px;
+    border-style: dashed;
+  }
+  > input {
+    width: 0px;
+    flex: 1 1 0px;
   }
 }
 

@@ -8,7 +8,7 @@ const routes: Routes = [
     path: '',
     component: LoginComponent,
     canActivate: [() => {
-      if (localStorage.getItem('token')) {
+      if (localStorage.getItem('active_environment')) {
         const router = inject(Router);
         return router.parseUrl('/items');
       } else {
@@ -20,7 +20,7 @@ const routes: Routes = [
     path: 'items',
     component: TodoOverviewComponent,
     canActivate: [() => {
-      if (localStorage.getItem('token')) {
+      if (localStorage.getItem('active_environment')) {
         return true;
       } else {
         const router = inject(Router);
