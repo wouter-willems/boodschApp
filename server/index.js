@@ -98,7 +98,7 @@ apiRouterAuth.post('/items', function (req, res) {
     };
     items.unshift(newItem);
     writeData(req.headers.token, items);
-    addSuggestion(req.headers.token, newItem.name);
+    addSuggestion( newItem.name);
     return res.json(newItem);
 });
 apiRouterAuth.patch('/items/:id', function (req, res) {
@@ -145,8 +145,8 @@ apiRouter.post('/login', function (req, res) {
 
 app.use('/api', apiRouter);
 apiRouter.use('/auth', apiRouterAuth);
-app.use(express.static('static/generated'))
 
+app.use(express.static('static/generated'))
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'static/generated/index.html'));
 });
