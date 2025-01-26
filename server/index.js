@@ -7,6 +7,10 @@ const apiRouter = express.Router();
 const apiRouterAuth = express.Router();
 const fs = require('fs');
 const path = require('path');
+const {GoogleSpreadsheet: GoogleSpreadsheet} = require('google-spreadsheet');
+const {JWT: JWT} = require('google-auth-library');
+
+let sheet;
 
 app.use(cors({
     origin: 'http://localhost:4200'
@@ -28,26 +32,31 @@ function getContextVars() {
     }
 }
 
-function readData() {
+async function readData() {
     const {environment} = getContextVars();
-    try {
-        return JSON.parse(fs.readFileSync(`data_${environment}.json`, 'utf8'));
-    } catch (err) {
-        return [];
-    }
+    const rows = await sheet.getRows();
+    const a = rows[0].get('data');
+    return JSON.parse(a);
 }
 
-function writeData(token, items) {
+async function writeData(token, items) {
     const {environment} = getContextVars();
-    const filtered = items.filter(e => e.boughtAt === null || new Date(e.boughtAt).getTime() > new Date().getTime() - 1000 * 60 * 60 * 24);
-    fs.writeFileSync(`data_${environment}.json`, JSON.stringify(filtered))
+    const filtered = items.filter(e => e.boughtAt === null || e.boughtAt === undefined || new Date(e.boughtAt).getTime() > new Date().getTime() - 1000 * 60 * 60 * 24);
+    
+    const rows = await sheet.getRows();
+    rows[0].set('data', JSON.stringify(filtered));
+    await rows[0].save();
 }
 
-function addSuggestion(suggestion) {
+async function addSuggestion(suggestion) {
+    console.log('addSuggestion', suggestion);
     const {environment} = getContextVars();
-    const suggestions = readSuggestions();
+    const suggestions = await readSuggestions();
     if (!suggestions.includes(suggestion)) {
-        fs.writeFileSync(`suggestions_${environment}.json`, JSON.stringify([suggestion, ...suggestions]))
+    
+        const rows = await sheet.getRows();
+        rows[0].set('suggestions', JSON.stringify([suggestion, ...suggestions]));
+        await rows[0].save();
     }
 }
 
@@ -59,13 +68,12 @@ function readTokens() {
     }
 }
 
-function readSuggestions() {
+async function readSuggestions() {
     const {environment} = getContextVars();
-    try {
-        return JSON.parse(fs.readFileSync(`suggestions_${environment}.json`, 'utf8'));
-    } catch (err) {
-        return [];
-    }
+    const rows = await sheet.getRows();
+    const a = rows[0].get('suggestions');
+    console.log('aaa', a);
+    return JSON.parse(a);
 }
 
 apiRouterAuth.use(httpContext.middleware);
@@ -85,27 +93,30 @@ apiRouterAuth.use((req, res, next) => {
 })
 
 apiRouterAuth.get('/items', function (req, res) {
-    const items = readData();
-    res.json(items)
+    readData().then(r => {
+        res.json(r);
+    });
 });
 apiRouterAuth.post('/items', function (req, res) {
-    const items = readData(req.headers.token);
-    const body = req.body;
-    const newItem = {
-        "name": body.name,
-        "id": uuidv4(),
-        "boughtAt": null,
-    };
-    items.unshift(newItem);
-    writeData(req.headers.token, items);
-    addSuggestion( newItem.name);
-    return res.json(newItem);
+    readData(req.headers.token).then(async (items) => {
+        const body = req.body;
+        const newItem = {
+            "name": body.name,
+            "id": uuidv4(),
+            "boughtAt": null,
+        };
+        items.unshift(newItem);
+        console.log('items to save');
+        console.log(items);
+        await Promise.all([writeData(req.headers.token, items), addSuggestion( newItem.name)]);
+        res.json(newItem);
+    });
 });
-apiRouterAuth.patch('/items/:id', function (req, res) {
+apiRouterAuth.patch('/items/:id', async function (req, res) {
     const id = req.params.id;
     const body = req.body;
 
-    const items = readData(req.headers.token);
+    const items = await readData(req.headers.token);
     const altered = items.map(e => {
         if (e.id === id) {
             return {
@@ -116,21 +127,20 @@ apiRouterAuth.patch('/items/:id', function (req, res) {
         }
         return e;
     });
-    writeData(req.headers.token, altered);
-    addSuggestion(req.headers.token, body.name);
+    await writeData(req.headers.token, altered);
+    await addSuggestion(req.headers.token, body.name);
     return res.json(altered.find(e => e.id === id));
 });
-apiRouterAuth.delete('/items/:id', function (req, res) {
+apiRouterAuth.delete('/items/:id', async function (req, res) {
     const id = req.params.id;
 
-    const items = readData(req.headers.token);
+    const items = await readData(req.headers.token);
     const altered = items.filter(e => e.id !== id);
-    writeData(req.headers.token, altered);
+    await writeData(req.headers.token, altered);
     return res.send();
 });
 apiRouterAuth.get('/suggestions', function (req, res) {
-    const suggestions = readSuggestions(req.headers.token);
-    res.json(suggestions)
+    readSuggestions(req.headers.token).then(r => res.json(r));
 });
 
 apiRouter.post('/login', function (req, res) {
@@ -151,6 +161,20 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'static/generated/index.html'));
 });
 
-app.listen(3000)
+const serviceAccountAuth = new JWT({
+  // env var values here are copied from service account credentials generated by google
+  // see "Authentication" section in docs for more info
+  email: process.env.MAIL,
+  key: process.env.KEY.replace(/\\n/g, "\n"),
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
 
-console.log('listening on 3000')
+const doc = new GoogleSpreadsheet('1NKP-KxYkPZkreImnjUXMiE1KQudjhiwYeZlS6Vf90tg', serviceAccountAuth);
+(async function () {
+    await doc.loadInfo(); // loads document properties and worksheets
+    console.log(doc.title);
+    sheet = doc.sheetsByIndex[0];
+    app.listen(3000)
+
+    console.log('listening on 3000');
+})();
