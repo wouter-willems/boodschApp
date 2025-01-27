@@ -32,17 +32,20 @@ function getContextVars() {
     }
 }
 
+let myItems = [];
+let mySuggestions = [];
+
 async function readData() {
     const {environment} = getContextVars();
     const rows = await sheet.getRows();
     const a = rows[0].get('data');
-    return JSON.parse(a);
+    myItems = JSON.parse(a);
 }
 
 async function writeData(token, items) {
     const {environment} = getContextVars();
     const filtered = items.filter(e => e.boughtAt === null || e.boughtAt === undefined || new Date(e.boughtAt).getTime() > new Date().getTime() - 1000 * 60 * 60 * 24);
-    
+    myItems = filtered;
     const rows = await sheet.getRows();
     rows[0].set('data', JSON.stringify(filtered));
     await rows[0].save();
@@ -51,11 +54,14 @@ async function writeData(token, items) {
 async function addSuggestion(suggestion) {
     console.log('addSuggestion', suggestion);
     const {environment} = getContextVars();
-    const suggestions = await readSuggestions();
-    if (!suggestions.includes(suggestion)) {
+    const suggestions = mySuggestions;
+    console.log([suggestion, ...suggestions]);
     
+    if (!suggestions.includes(suggestion)) {
+        const newSuggestions = [suggestion, ...suggestions];
+        mySuggestions = newSuggestions;
         const rows = await sheet.getRows();
-        rows[0].set('suggestions', JSON.stringify([suggestion, ...suggestions]));
+        rows[0].set('suggestions', JSON.stringify(newSuggestions));
         await rows[0].save();
     }
 }
@@ -72,8 +78,7 @@ async function readSuggestions() {
     const {environment} = getContextVars();
     const rows = await sheet.getRows();
     const a = rows[0].get('suggestions');
-    console.log('aaa', a);
-    return JSON.parse(a);
+    mySuggestions = JSON.parse(a);
 }
 
 apiRouterAuth.use(httpContext.middleware);
@@ -93,12 +98,10 @@ apiRouterAuth.use((req, res, next) => {
 })
 
 apiRouterAuth.get('/items', function (req, res) {
-    readData().then(r => {
-        res.json(r);
-    });
+    res.json(myItems);
 });
 apiRouterAuth.post('/items', function (req, res) {
-    readData(req.headers.token).then(async (items) => {
+        const items = myItems;
         const body = req.body;
         const newItem = {
             "name": body.name,
@@ -108,15 +111,14 @@ apiRouterAuth.post('/items', function (req, res) {
         items.unshift(newItem);
         console.log('items to save');
         console.log(items);
-        await Promise.all([writeData(req.headers.token, items), addSuggestion( newItem.name)]);
+        writeData(req.headers.token, items).then(() => {addSuggestion(newItem.name)});
         res.json(newItem);
-    });
 });
 apiRouterAuth.patch('/items/:id', async function (req, res) {
     const id = req.params.id;
     const body = req.body;
 
-    const items = await readData(req.headers.token);
+    const items = myItems;
     const altered = items.map(e => {
         if (e.id === id) {
             return {
@@ -127,20 +129,19 @@ apiRouterAuth.patch('/items/:id', async function (req, res) {
         }
         return e;
     });
-    await writeData(req.headers.token, altered);
-    await addSuggestion(req.headers.token, body.name);
+    writeData(req.headers.token, altered).then(() => {addSuggestion(body.name)});
     return res.json(altered.find(e => e.id === id));
 });
 apiRouterAuth.delete('/items/:id', async function (req, res) {
     const id = req.params.id;
 
-    const items = await readData(req.headers.token);
+    const items = myItems;
     const altered = items.filter(e => e.id !== id);
-    await writeData(req.headers.token, altered);
+    writeData(req.headers.token, altered);
     return res.send();
 });
 apiRouterAuth.get('/suggestions', function (req, res) {
-    readSuggestions(req.headers.token).then(r => res.json(r));
+    res.json(mySuggestions);
 });
 
 apiRouter.post('/login', function (req, res) {
@@ -178,6 +179,8 @@ const doc = new GoogleSpreadsheet('1NKP-KxYkPZkreImnjUXMiE1KQudjhiwYeZlS6Vf90tg'
     await doc.loadInfo(); // loads document properties and worksheets
     console.log(doc.title);
     sheet = doc.sheetsByIndex[0];
+    await readData();
+    await readSuggestions();
     app.listen(3000)
 
     console.log('listening on 3000');
